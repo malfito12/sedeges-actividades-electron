@@ -1,4 +1,4 @@
-import { Container, Box, makeStyles, Paper, Dialog, Typography, TableContainer, Table, TableRow, TableCell, TableBody, TableHead, IconButton, Grid, InputAdornment, TextField, Button, Tooltip } from '@material-ui/core'
+import { Container, Box, makeStyles, Toolbar, Paper, Dialog, Typography, TableContainer, Table, TableRow, TableCell, TableBody, TableHead, IconButton, Grid, InputAdornment, TextField, Button, Tooltip, AppBar } from '@material-ui/core'
 import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
@@ -9,6 +9,9 @@ import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import EditIcon from '@material-ui/icons/Edit'
 import DeleteIcon from '@material-ui/icons/Delete'
+import PrintIcon from '@material-ui/icons/Print';
+import sello from '../../../images/sello.png'
+import { ErrorAlertsMateriales, SuccessAlertsMateriales } from '../../Atoms/Alerts/Alerts'
 
 const ipcRenderer = window.require('electron').ipcRenderer
 const useStyles = makeStyles((theme) => ({
@@ -17,12 +20,15 @@ const useStyles = makeStyles((theme) => ({
     }
 }))
 const ListaProduct = (props) => {
+    // console.log(props)
     const classes = useStyles()
     const { history } = props
     const [material, setMaterial] = useState([])
     const [buscador, setBuscador] = useState("")
     const [openEditMaterial, setOpenEditMaterial] = useState(false)
     const [openDeleteMaterial, setOpenDeleteMaterial] = useState(false)
+    const [openAlertSuccess, setOpenAlertSuccess] = useState(false)
+    const [openAlertError, setOpenAlertError] = useState(false)
     const [changeData, setChangeData] = useState({
         _id: '',
         codMaterial: '',
@@ -35,8 +41,12 @@ const ListaProduct = (props) => {
 
     //-------------GET MATERIALES-----------------------------
     const getMateriales = async () => {
-        const result = await ipcRenderer.invoke('get-material')
-        setMaterial(JSON.parse(result))
+        try {
+            const result = await ipcRenderer.invoke('get-material')
+            setMaterial(JSON.parse(result))
+        } catch (error) {
+            console.log(error)
+        }
     }
     //-------------EDIT MATERIAL-----------------------------
     const openModalEditMaterial = (e) => {
@@ -46,29 +56,41 @@ const ListaProduct = (props) => {
     const closeModalEditMaterial = () => {
         setOpenEditMaterial(false)
     }
-    const editMaterial=async(e)=>{
+    const editMaterial = async (e) => {
         e.preventDefault()
         // const id=changeData._id
-        const result=await ipcRenderer.invoke("edit-material",changeData)
-        console.log(JSON.parse(result))
-        getMateriales()
-        closeModalEditMaterial()
+        const result = await ipcRenderer.invoke("edit-material", changeData)
+        .then(resp=>{
+            getMateriales()
+            closeModalEditMaterial()
+            openCloseAlertSuccess()
+        })
+        .catch(err=>{
+            openCloseAlertError()
+        })
+        // console.log(JSON.parse(result))
     }
     //-------------DELETE MATERIAL-----------------------------
-    const openModalDeleteMaterial=(e)=>{
+    const openModalDeleteMaterial = (e) => {
         setChangeData(e)
         setOpenDeleteMaterial(true)
     }
-    const closeModalDeleteMaterial=()=>{
+    const closeModalDeleteMaterial = () => {
         setOpenDeleteMaterial(false)
     }
-    const deleteMateerial=async(e)=>{
+    const deleteMateerial = async (e) => {
         e.preventDefault()
         // const id=changeData._id
-        const result=await ipcRenderer.invoke("delete-material",changeData)
-        getMateriales()
-        closeModalDeleteMaterial()
-        console.log(JSON.parse(result))
+        const result = await ipcRenderer.invoke("delete-material", changeData)
+        .then(resp=>{
+            getMateriales()
+            closeModalDeleteMaterial()
+            openCloseAlertSuccess()
+        })
+        .catch(err=>{
+            openCloseAlertError()
+        })
+        // console.log(JSON.parse(result))
     }
     //-------------COLOR DE TABLAS-----------------------------
     const getTableColor = (e) => {
@@ -111,75 +133,126 @@ const ListaProduct = (props) => {
     ]
     //--------------------IMPRIMIR-----------------------------
     const pdfGenerate = () => {
-        // const doc = new jsPDF('p','pt','letter')
-        const doc = new jsPDF()
-        // document.getElementById('desaparecer').style.display='none'
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'in', format: [11, 7] })
+
+        var pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth()
+        var pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.height()
+
         document.getElementById('desaparecer1').style.display = 'none'
         document.getElementById('desaparecer2').style.display = 'none'
-        doc.setFontSize(20)
-        doc.text(`Tabla de Materiales`, 75, 20);
-        doc.setFontSize(10)
-        doc.text("Sub-Tabla de Materiales", 90, 30);
-        // ${"#id-titulo"}.css("font-size", "10px")
-        // doc.autoTable({ html: "#id-table", styles: { halign: 'center' }, margin: { top: 25 } })
+        // doc.setFont('Helvetica');
+        doc.setFontSize(15)
+        doc.setFont('Courier', 'Bold');
+        doc.addImage(`${sello}`, 0.5, 0.3, 1.5, 0.7)
+        doc.text(`Tabla de Materiales`, pageWidth / 2, 1, 'center');
+        // doc.autoTable({ html: "#id-table",startY:1.3, styles: { halign: 'center' }, margin: { top: 2 } })
+        // doc.autoTable({ html: "#id-table",startY:1.3,styles: { halign: 'center',fontSize:8 }})
         doc.autoTable({
+            headStyles: {
+                fillColor: [50, 50, 50]
+            },
+            bodyStyles: {
+                cellPadding: 0.01
+            },
+            // alternateRowStyles: { fillColor: [231, 215, 252] },
+            // tableLineColor: [124, 95, 240],
+            // tableLineWidth: 0.01,
             head: [[
-                { content: 'N°', styles: { cellWidth: 30 } },
-                { content: 'Codigo', styles: { cellWidth: 50 } },
-                { content: 'Material' }
+                { content: 'N°' },
+                { content: 'Codigo', styles: { cellWidth: 1 } },
+                { content: 'Material', styles: { halign: 'center' } }
             ]],
-            body: material.map((d, index) => ([[index + 1], [d.codMaterial], [d.nameMaterial]])),
-            styles: { halign: 'center' },
-            startY: 35,
-
-            // body:[[{content:'Text', styles:{halign:'center',lineWidth:1,} },{content:'nose'}],[{content:'hola'}]],
-
+            body: material.map((d, index) => ([
+                { content: index + 1 },
+                { content: d.codMaterial },
+                { content: d.nameMaterial }
+            ])),
+            styles: { fontSize: 8, font: 'courier', fontStyle: 'bold' },
+            startY: 1.3,
         })
+        var pages = doc.internal.getNumberOfPages()
+        for (var i = 1; i <= pages; i++) {
+            var horizontalPos = pageWidth / 2
+            var verticalPos = pageHeight - 0.2
+            doc.setFontSize(8)
+            doc.setPage(i)
+            doc.text(`${i} de ${pages}`, horizontalPos, verticalPos, { align: 'center' })
+        }
         document.getElementById('desaparecer1').style.display = 'revert'
         document.getElementById('desaparecer2').style.display = 'revert'
         window.open(doc.output('bloburi'))
         // doc.save('ListaMateriales.pdf')
-
     }
     // console.log(material)
     // console.log(changeData)
+    //-----------------------------------------------
+    // const [nuevo, setNuevo] = useState("relative")
+    // const [mio, setMio] = useState("5rem")
+    // const changeScroll = (e) => {
+    //     e.preventDefault()
+    //     if (window.scrollY >= 100) {
+    //         setNuevo("fixed")
+    //         setMio("0")
+    //     } else {
+    //         setNuevo("relative")
+    //         setMio("5rem")
+    //     }
+    //     // console.log(window.scrollY)
+    // }
+    // window.addEventListener('scroll', changeScroll)
+    //--------------------------------------------
+    //----------------------------------------------------
+    const openCloseAlertSuccess = () => {
+        setOpenAlertSuccess(!openAlertSuccess)
+    }
+    const openCloseAlertError = () => {
+        setOpenAlertError(!openAlertError)
+    }
+
     return (
         <>
-            <Container style={{ paddingLeft: 240 }}>
-                <Typography style={{ paddingTop: '5rem', marginBottom: '2rem' }} variant='h5' align='center' >Lista de Productos</Typography>
-                <Grid container style={{ marginBottom: '0.5rem' }}>
-                    <Grid item xs={8} sm={4} >
-                        <RegisterMaterial uno={getMateriales} />
-                    </Grid>
-                    <Grid item xs={8} sm={4}>
-                        <Paper>
-                            {material &&
-                                <TextField
-                                    // style={{width:'100%'}}
-                                    fullWidth
-                                    InputProps={{
-                                        startAdornment: (
-                                            <>
-                                                <Typography variant='subtitle1' style={{ marginRight: '0.5rem' }}>Buscar</Typography>
-                                                <InputAdornment position='start'>
-                                                    <SearchIcon />
-                                                </InputAdornment>
+            <Typography style={{ paddingTop: '2rem', marginBottom: '1rem', color: 'white' }} variant='h5' align='center' >Lista de Productos</Typography>
+            <Container maxWidth='lg'>
+                <Grid container direction='row' justifyContent='space-between' alignItems='center' style={{ marginBottom: '0.5rem' }}>
+                    <RegisterMaterial uno={getMateriales} />
+                    <div>
+                        {material &&
+                            <TextField
+                                style={{ background: 'white', borderRadius: 5, marginRight: '1rem' }}
+                                variant='outlined'
+                                size='small'
+                                // fullWidth
+                                InputProps={{
+                                    startAdornment: (
+                                        <>
+                                            <Typography variant='subtitle1' style={{ marginRight: '0.5rem' }}>Buscar</Typography>
+                                            <InputAdornment position='start'>
+                                                <SearchIcon />
+                                            </InputAdornment>
 
-                                            </>
-                                        )
-                                    }}
-                                    onChange={e => setBuscador(e.target.value)}
-                                />
-                            }
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={8} sm={4} container justifyContent='flex-end' alignItems='flex-start'>
-                        <Button size='small' variant='contained' color='primary' onClick={pdfGenerate}>imprimir</Button>
-                    </Grid>
+                                        </>
+                                    )
+                                }}
+                                onChange={e => setBuscador(e.target.value)}
+                            />
+                        }
+                        <IconButton
+                            component="span"
+                            style={{
+                                color: 'white',
+                                background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)',
+                                marginRight: '0.5rem',
+                            }}
+                            onClick={pdfGenerate}>
+                            <Tooltip title='imprimir'>
+                                <PrintIcon />
+                            </Tooltip>
+                        </IconButton>
+                    </div>
                 </Grid>
-                <Paper component={Box} p={1}>
-                    <TableContainer>
-                        <Table id='id-table'>
+                <Paper component={Box} p={0.3}>
+                    <TableContainer style={{ maxHeight: 550 }}>
+                        <Table id='id-table' stickyHeader size='small'>
                             <TableHead>
                                 <TableRow>
                                     <TableCell style={{ color: 'white', backgroundColor: "black" }}>N°</TableCell>
@@ -193,7 +266,7 @@ const ListaProduct = (props) => {
                                 {material.length > 0 ? (
                                     material.filter(buscarMaterial(buscador)).map((m, index) => (
                                         <TableRow key={m._id} style={getTableColor(index)}>
-                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell /*style={{ fontSize: '10px' }}*/>{index + 1}</TableCell>
                                             <TableCell>{m.codMaterial}</TableCell>
                                             <TableCell>{m.nameMaterial}</TableCell>
                                             <TableCell align='center'>
@@ -206,12 +279,12 @@ const ListaProduct = (props) => {
                                             <TableCell>
                                                 <Grid container justifyContent='space-evenly'>
                                                     <Tooltip title='edit'>
-                                                        <IconButton size='small' style={{color:'green'}} onClick={() => openModalEditMaterial(m)}>
+                                                        <IconButton size='small' style={{ color: 'green' }} onClick={() => openModalEditMaterial(m)}>
                                                             <EditIcon />
                                                         </IconButton>
                                                     </Tooltip>
                                                     <Tooltip title='delete'>
-                                                        <IconButton size='small' style={{color:'red'}} onClick={() => openModalDeleteMaterial(m)}>
+                                                        <IconButton size='small' style={{ color: 'red' }} onClick={() => openModalDeleteMaterial(m)}>
                                                             <DeleteIcon />
                                                         </IconButton>
                                                     </Tooltip>
@@ -221,7 +294,7 @@ const ListaProduct = (props) => {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan='4'>no existen datos</TableCell>
+                                        <TableCell colSpan='5' align='center'>no existen datos</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -237,31 +310,32 @@ const ListaProduct = (props) => {
                 <Paper component={Box} p={2}>
                     <Typography align='center' variant='subtitle1'>EDITAR MATERIAL</Typography>
                     <form onSubmit={editMaterial}>
-                        <Grid container direction='column'>
-                            <TextField
-                                name='codMaterial'
-                                label='Codigo de Material'
-                                variant='outlined'
-                                size='small'
-                                value={changeData.codMaterial}
-                                className={classes.spacingBot}
-                                // onChange={handleChange}
-                                required
-                            />
-                            <TextField
-                                name='nameMaterial'
-                                label='Codigo de Material'
-                                variant='outlined'
-                                size='small'
-                                defaultValue={changeData.nameMaterial}
-                                className={classes.spacingBot}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Grid>
+                        <TextField
+                            disabled
+                            name='codMaterial'
+                            label='Codigo de Material'
+                            variant='outlined'
+                            size='small'
+                            fullWidth
+                            value={changeData.codMaterial}
+                            className={classes.spacingBot}
+                            // onChange={handleChange}
+                            required
+                        />
+                        <TextField
+                            name='nameMaterial'
+                            label='Codigo de Material'
+                            variant='outlined'
+                            size='small'
+                            fullWidth
+                            defaultValue={changeData.nameMaterial}
+                            className={classes.spacingBot}
+                            onChange={handleChange}
+                            required
+                        />
                         <Grid container justifyContent='space-evenly'>
-                            <Button style={{fontSize:'xx-small'}} variant='contained' color='primary' type='submit'>aceptar</Button>
-                            <Button style={{fontSize:'xx-small'}} variant='contained' color='secondary' onClick={closeModalEditMaterial}>cancelar</Button>
+                            <Button style={{ fontSize: 'xx-small' }} variant='contained' color='primary' type='submit'>aceptar</Button>
+                            <Button style={{ fontSize: 'xx-small' }} variant='contained' color='secondary' onClick={closeModalEditMaterial}>cancelar</Button>
                         </Grid>
                     </form>
                 </Paper>
@@ -274,11 +348,14 @@ const ListaProduct = (props) => {
                 <Paper component={Box} p={2}>
                     <Typography className={classes.spacingBot} align='center' variant='subtitle1'>¿Estas seguro de eliminar " {changeData.nameMaterial} " y todos sus registros?</Typography>
                     <Grid container justifyContent='space-evenly'>
-                            <Button style={{fontSize:'xx-small'}} variant='contained' color='primary' onClick={deleteMateerial}>aceptar</Button>
-                            <Button style={{fontSize:'xx-small'}} variant='contained' color='secondary' onClick={closeModalDeleteMaterial}>cancelar</Button>
-                        </Grid>
+                        <Button style={{ fontSize: 'xx-small' }} variant='contained' color='primary' onClick={deleteMateerial}>aceptar</Button>
+                        <Button style={{ fontSize: 'xx-small' }} variant='contained' color='secondary' onClick={closeModalDeleteMaterial}>cancelar</Button>
+                    </Grid>
                 </Paper>
             </Dialog>
+            {/* -------------------------ALERTS------------------------ */}
+            <SuccessAlertsMateriales open={openAlertSuccess} setOpen={openCloseAlertSuccess} />
+            <ErrorAlertsMateriales open={openAlertError} setOpen={openCloseAlertError} />
         </>
     )
 }

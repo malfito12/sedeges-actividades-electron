@@ -1,6 +1,9 @@
-import { Button, Container, Grid, makeStyles, Typography } from '@material-ui/core'
+import { Button, Container, Grid, makeStyles, Typography, AppBar, Toolbar, IconButton } from '@material-ui/core'
+import MenuIcon from '@material-ui/icons/Menu'
 import React from 'react'
 import { Link } from 'react-router-dom'
+import UnidadMedida from '../Pages2/Registros/UnidadMedida'
+import { Main } from '../Organismsm/NewDrawer'
 
 const useStyles = makeStyles((theme) => ({
     toolbar: theme.mixins.toolbar,
@@ -50,26 +53,24 @@ const useStyles = makeStyles((theme) => ({
 const Home = () => {
     const classes = useStyles()
     return (
-        <Container maxWidth={false} id='image'>
-            <div style={{paddingLeft:240, marginBottom:'2rem'}}>
-                <Typography style={{paddingTop:'5rem', marginBottom:'4rem'}} variant='h4' align='center'>Pagina Principal</Typography>
-                {/* <Button variant='contained' color='primary' component={Link} to='/register'>Register</Button> */}
-                    <div align='center'>
-                    <Grid container  item xs={12} sm={12}justifyContent='space-evenly'>
-                        {/* <Button component={Link} to='/register' style={{ marginBottom: '4rem' }} classes={{ root: classes.root1, label: classes.label }}>Registro de Materiales</Button> */}
-                        <Button component={Link} to='/listaProduct' style={{ marginBottom: '4rem' }} classes={{ root: classes.root2, label: classes.label }}>Lista de Materiales</Button>
-                        <Button component={Link} to='/listaAlmacen' style={{ marginBottom: '4rem' }} classes={{ root: classes.root3, label: classes.label }}>Almacén</Button>
-                    </Grid>
-                    </div>
-                    <div align='center'>
-                    <Grid item xs={12} sm={12} >
-                        <Button component={Link} to='/ingresoMateriales' style={{ marginBottom: '1rem',marginRight:'4rem' }} classes={{ root: classes.root1, label: classes.label }}>Ingresos</Button>
-                        <Button component={Link} to='/salidaMateriales' style={{ marginBottom: '1rem' }} classes={{ root: classes.root2, label: classes.label }}>Salidas</Button>
-                    </Grid>
-                    </div>
-                    
+        <>
+            {/* <div style={{ paddingLeft: 240, marginBottom: '2rem' }}> */}
+            <Typography style={{ paddingTop: '5rem', marginBottom: '4rem' }} variant='h4' align='center'>Pagina Principal</Typography>
+            {/* <Button variant='contained' color='primary' component={Link} to='/register'>Register</Button> */}
+            <div align='center'>
+                <Grid container item xs={12} sm={12} justifyContent='space-evenly'>
+                    {/* <Button component={Link} to='/register' style={{ marginBottom: '4rem' }} classes={{ root: classes.root1, label: classes.label }}>Registro de Materiales</Button> */}
+                    <Button component={Link} to='/listaProduct' style={{ marginBottom: '4rem' }} classes={{ root: classes.root2, label: classes.label }}>Lista de Materiales</Button>
+                    <Button component={Link} to='/listaAlmacen' style={{ marginBottom: '4rem' }} classes={{ root: classes.root3, label: classes.label }}>Almacén</Button>
+                </Grid>
             </div>
-        </Container>
+            <div align='center'>
+                <Grid item xs={12} sm={12} >
+                    <Button component={Link} to='/ingresoMateriales' style={{ marginBottom: '1rem', marginRight: '4rem' }} classes={{ root: classes.root1, label: classes.label }}>Ingresos</Button>
+                    <Button component={Link} to='/salidaMateriales' style={{ marginBottom: '1rem' }} classes={{ root: classes.root2, label: classes.label }}>Salidas</Button>
+                </Grid>
+            </div>
+        </>
     )
 }
 

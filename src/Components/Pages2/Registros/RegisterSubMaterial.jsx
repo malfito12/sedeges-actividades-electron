@@ -2,6 +2,7 @@ import { Button, MenuItem, Box, Dialog, Paper, Typography, makeStyles, TextField
 import React from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
+import BookmarkIcon from '@material-ui/icons/Bookmark';
 
 
 const ipcRenderer = window.require('electron').ipcRenderer
@@ -13,7 +14,7 @@ const useStyles = makeStyles((theme) => ({
 const RegisterSubMaterial = (props) => {
     const classes = useStyles()
     const [image, setImage] = useState(null)
-    const [preview,setPreview]=useState(null)
+    const [preview, setPreview] = useState(null)
     const [openRegister, setOpenRegister] = useState(false)
     const [unidadMedida, setUnidadMedida] = useState([])
     const [changeData, setChangeData] = useState({
@@ -36,16 +37,16 @@ const RegisterSubMaterial = (props) => {
     const closeModalRegister = () => {
         setOpenRegister(false)
     }
-    const postSubMaterial=async(e)=>{
+    const postSubMaterial = async (e) => {
         e.preventDefault()
-        var data={
-            nameSubMaterial:changeData.nameSubMaterial,
-            nameMaterial:changeData.nameMaterial,
-            codMaterial:changeData.codMaterial,
-            unidadMedida:changeData.unidadMedida,
-            image:preview
+        var data = {
+            nameSubMaterial: changeData.nameSubMaterial,
+            nameMaterial: changeData.nameMaterial,
+            codMaterial: changeData.codMaterial,
+            unidadMedida: changeData.unidadMedida,
+            image: preview
         }
-        const result=await ipcRenderer.invoke('post-subMaterial',data)
+        const result = await ipcRenderer.invoke('post-subMaterial', data)
         console.log(JSON.parse(result))
         closeModalRegister()
         props.uno()
@@ -59,8 +60,12 @@ const RegisterSubMaterial = (props) => {
     //----------------------------------------------
     //-------------------GET UNIDAD DE MEDIDA------------------------
     const getUnidadMedida = async () => {
-        const result = await ipcRenderer.invoke('get-unidadMedida')
-        setUnidadMedida(JSON.parse(result))
+        try {
+            const result = await ipcRenderer.invoke('get-unidadMedida')
+            setUnidadMedida(JSON.parse(result))
+        } catch (error) {
+            console.log(error)
+        }
 
     }
     //----------------------------------------------
@@ -89,12 +94,12 @@ const RegisterSubMaterial = (props) => {
             [e.target.name]: e.target.value
         })
     }
-    
+
     // console.log(preview)
     // console.log(changeData)
     return (
         <>
-            <Button size='small' className={classes.spacingBot} variant='contained' color='primary' onClick={openModalRegister}>registrar sub-material</Button>
+            <Button style={{ background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)', color: 'white' }} endIcon={<BookmarkIcon />} variant='contained'  onClick={openModalRegister}>registrar sub-material</Button>
             <Dialog
                 open={openRegister}
                 onClose={closeModalRegister}
@@ -147,16 +152,16 @@ const RegisterSubMaterial = (props) => {
                             <Grid item xs={12} sm={6}>
                                 <div align='center' className={classes.spacingBot}>
                                     <Paper component={Box} p={1} style={{ background: '#bdbdbd', width: '150px', height: '150px' }}>
-                                        <img src={preview} style={{ width: '100%', height: '100%' }} alt='#'  />
+                                        <img src={preview} style={{ width: '100%', height: '100%' }} alt='#' />
                                     </Paper>
-                                    <input 
+                                    <input
                                         name='image'
                                         type='file'
                                         accept='image/*'
                                         id='file-image'
-                                        style={{display:'none'}}
+                                        style={{ display: 'none' }}
                                         onChange={handleChange}
-                                        // required
+                                    // required
 
                                     />
                                     <label htmlFor='file-image'>

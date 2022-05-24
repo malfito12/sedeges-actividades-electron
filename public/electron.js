@@ -10,8 +10,8 @@ const momet = require('moment')
 
 const mongoose = require('mongoose')
 
-// mongoose.connect('mongodb://localhost/cachitambodb', {
-mongoose.connect('mongodb://localhost/electrondb', {
+mongoose.connect('mongodb://localhost/cachitambodb', {
+// mongoose.connect('mongodb://localhost/electrondb', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false
@@ -105,8 +105,8 @@ let win
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    // width: 1200,
+    // height: 800,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -115,6 +115,8 @@ function createWindow() {
       // preload: path.join(__dirname, 'preload.js')
     }
   })
+  win.maximize()
+  win.show()
 
   // and load the index.html of the app.
   win.loadURL(
@@ -122,22 +124,16 @@ function createWindow() {
   )
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+
 app.whenReady().then(() => {
   createWindow()
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
+
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
@@ -442,114 +438,6 @@ ipcMain.handle('post-entradas', async (e, args) => {
         // console.log('no')
       }
     }
-    // for(var i=0;i<aux;i++){
-    // const entradasalida= new ENTRADASSALIDAS(result[i])
-    // const entradasalidaSaved= await entradasalida.save()
-    // const tarjeta=await TARJETAEXISTENCIA.find({"$and":[{typeRegister:result[i].typeRegister},{codSubMaterial:result[i].codSubMaterial}]})
-    // var uno=tarjeta.length
-    // if(uno===0){
-    //   uno=(uno+1).toString()
-    //   var numeroIngreso="N-"+uno
-    //   array.push({
-    //     typeRegister:result[i].typeRegister,
-    //     numFactura: result[i].numFactura,
-    //     nameMaterial: result[i].nameMaterial,
-    //     codMaterial:result[i].codMaterial,
-    //     nameSubMaterial: result[i].nameSubMaterial,
-    //     codSubMaterial:result[i].codSubMaterial,
-    //     cantidadF: result[i].cantidadF,
-    //     cantidadR: result[i].cantidadR,
-    //     deDonde: result[i].deDonde,
-    //     unidadMedida: result[i].unidadMedida,
-    //     precioEntrada: result[i].precioEntrada,
-    //     procedenciaDestino: result[i].procedenciaDestino,
-    //     fechaIngreso: result[i].fechaIngreso,
-
-    //     // fechaSalida: String,
-
-    //     numIngreso:numeroIngreso,
-    //     cantidadEntrada:result[i].cantidadF,
-    //     // cantidadSalida:String,
-    //     saldoExistencia:result[i].cantidadF,
-    //   })
-    //   const newTarjeta= new TARJETAEXISTENCIA(array[i])
-    //   await newTarjeta.save()
-    // }else{
-    //   var tarjeta2= await TARJETAEXISTENCIA.find({"$and":[{typeRegister:result[i].typeRegister},{codSubMaterial:result[i].codSubMaterial}]}).sort({$natural:-1}).limit(1)
-    //   var saldo=await TARJETAEXISTENCIA.find({"$and":[{codSubMaterial:result[i].codSubMaterial}]}).sort({$natural:-1}).limit(2)
-    //   if(saldo[0].typeRegister==='entrada'){
-    //     var sum=parseFloat(saldo[0].saldoExistencia)
-    //     var sum2=parseFloat(result[i].cantidadF)
-    //     sum=sum+sum2
-    //     var dos=tarjeta2[0].numIngreso
-    //     dos=dos.split("-")
-    //     dos=parseInt(dos[1])
-    //     var numeroIngreso=(dos+1).toString()
-    //     numeroIngreso="N-"+numeroIngreso
-    //     array.push({
-    //       typeRegister:result[i].typeRegister,
-    //       numFactura: result[i].numFactura,
-    //       nameMaterial: result[i].nameMaterial,
-    //       codMaterial:result[i].codMaterial,
-    //       nameSubMaterial: result[i].nameSubMaterial,
-    //       codSubMaterial:result[i].codSubMaterial,
-    //       cantidadF: result[i].cantidadF,
-    //       cantidadR: result[i].cantidadR,
-    //       deDonde: result[i].deDonde,
-    //       unidadMedida: result[i].unidadMedida,
-    //       precioEntrada: result[i].precioEntrada,
-    //       procedenciaDestino: result[i].procedenciaDestino,
-    //       fechaIngreso: result[i].fechaIngreso,
-
-    //       // fechaSalida: String,
-
-    //       numIngreso:numeroIngreso,
-    //       cantidadEntrada:result[i].cantidadF,
-    //       // cantidadSalida:String,
-    //       saldoExistencia:sum.toFixed(2)
-    //     })
-    //     const newTarjeta= new TARJETAEXISTENCIA(array[i])
-    //     await newTarjeta.save()
-
-    //   }else{
-    //     var sum=parseFloat(saldo[0].saldoExistencia)
-    //     var sum2=parseFloat(result[i].cantidadF)
-    //     sum=sum-sum2
-    //     var tres=tarjeta2[0].numIngreso
-    //     tres=tres.split("-")
-    //     tres=parseInt(tres[1])
-    //     var numeroIngreso=(tres+1).toString()
-    //     numeroIngreso="N-"+numeroIngreso
-    //     array.push({
-    //       typeRegister:result[i].typeRegister,
-    //       numFactura: result[i].numFactura,
-    //       nameMaterial: result[i].nameMaterial,
-    //       codMaterial:result[i].codMaterial,
-    //       nameSubMaterial: result[i].nameSubMaterial,
-    //       codSubMaterial:result[i].codSubMaterial,
-    //       cantidadF: result[i].cantidadF,
-    //       cantidadR: result[i].cantidadR,
-    //       deDonde: result[i].deDonde,
-    //       unidadMedida: result[i].unidadMedida,
-    //       precioEntrada: result[i].precioEntrada,
-    //       procedenciaDestino: result[i].procedenciaDestino,
-    //       fechaIngreso: result[i].fechaIngreso,
-
-    //       // fechaSalida: result[i].fechaSalida,
-
-    //       numIngreso:numeroIngreso,
-    //       // cantidadSalida:result[i].cantidadF,
-    //       // cantidadSalida:String,
-    //       saldoExistencia:sum.toFixed(2)
-    //     })
-    //     const newTarjeta= new TARJETAEXISTENCIA(array[i])
-    //     await newTarjeta.save()
-    //   }
-
-    // }
-    // const tarjetaExistencia= new TARJETAEXISTENCIA()
-
-    // }
     return JSON.stringify('entrada registrada')
 
   } catch (error) {

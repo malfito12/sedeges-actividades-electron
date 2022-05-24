@@ -1,6 +1,8 @@
 import { Button, Dialog, Paper, Box, Typography, TextField, makeStyles, Grid } from '@material-ui/core'
 import React from 'react'
 import { useState } from 'react'
+import BookmarkIcon from '@material-ui/icons/Bookmark';
+import { ErrorAlertsMateriales, SuccessAlertsMateriales } from '../../Atoms/Alerts/Alerts';
 
 const ipcRenderer = window.require('electron').ipcRenderer
 const useStyles = makeStyles((theme) => ({
@@ -12,8 +14,10 @@ const useStyles = makeStyles((theme) => ({
 const RegisterMaterial = (props) => {
     const classes = useStyles()
     const [openRegister, setOpenRegister] = useState(false)
-    const [changeData,setChangeData]=useState({
-        nameMaterial:''
+    const [openAlertSuccess, setOpenAlertSuccess] = useState(false)
+    const [openAlertError, setOpenAlertError] = useState(false)
+    const [changeData, setChangeData] = useState({
+        nameMaterial: ''
     })
 
     //---------------POST PRODUCTOS---------------------
@@ -23,46 +27,64 @@ const RegisterMaterial = (props) => {
     const closeModalRegister = () => {
         setOpenRegister(false)
     }
-
-    const postMaterial=async(e)=>{
+    const postMaterial = async (e) => {
         e.preventDefault()
-        // console.log(changeData)
-        // ipcRenderer.send('post-material',changeData)
-        // ipcRenderer.on('post-material',(e,args)=>{
-        //     console.log(args)
-        // })
-        const result= await ipcRenderer.invoke('post-material',changeData)
-        console.log(result)
-        closeModalRegister()
-        props.uno()
-        // console.log(result)
+        const result = await ipcRenderer.invoke('post-material', changeData)
+            .then(resp => {
+                console.log(resp)
+                openCloseAlertSuccess()
+                closeModalRegister()
+                props.uno()
+            })
+            .catch(err => {
+                openCloseAlertError()
+                console.log(err)
 
+            })
+        // console.log(JSON.parse(result))
+
+
+    }
+    //----------------------------------------------------
+    const openCloseAlertSuccess = () => {
+        setOpenAlertSuccess(!openAlertSuccess)
+    }
+    const openCloseAlertError = () => {
+        setOpenAlertError(!openAlertError)
     }
     //----------------------------------------------------
     //----------------------------------------------------
     //----------------------------------------------------
     //----------------------------------------------------
     //----------------------------------------------------
-    //----------------------------------------------------
-    const handleChange=(e)=>{
+    const handleChange = (e) => {
         setChangeData({
             ...changeData,
-            [e.target.name]:e.target.value
+            [e.target.name]: e.target.value
         })
     }
     // console.log(changeData)
-    
+
     return (
         <>
-            <Button size='small' className={classes.spacingBot} variant='contained' color='primary' onClick={openModalRegister}>registrar</Button>
+            <SuccessAlertsMateriales open={openAlertSuccess} setOpen={openCloseAlertSuccess} />
+            <ErrorAlertsMateriales open={openAlertError} setOpen={openCloseAlertError} />
+            <Button
+                variant='contained'
+                style={{ background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)', color: 'white' }}
+                // size='small'
+                endIcon={<BookmarkIcon />}
+                onClick={openModalRegister}
+            >Registrar
+            </Button>
             <Dialog
                 open={openRegister}
                 onClose={closeModalRegister}
                 maxWidth='md'
-                style={{ paddingLeft: 240 }}
+            // style={{ paddingLeft: 240 }}
             >
                 <Paper component={Box} p={2}>
-                    <div style={{marginLeft:'10rem',marginRight:'10rem'}}></div>
+                    <div style={{ marginLeft: '10rem', marginRight: '10rem' }}></div>
                     <Typography variant='subtitle1' align='center' className={classes.spacingBot}>Registrar producto</Typography>
                     <form onSubmit={postMaterial}>
                         <TextField
@@ -71,6 +93,7 @@ const RegisterMaterial = (props) => {
                             variant='outlined'
                             className={classes.spacingBot}
                             fullWidth
+                            size='small'
                             onChange={handleChange}
                             required
                         />

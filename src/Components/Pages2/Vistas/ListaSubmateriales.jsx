@@ -1,4 +1,4 @@
-import { Button, Dialog, Paper, Box, Container, Grid, Tooltip, TableCell, makeStyles, Typography, TableContainer, Table, TableHead, TableRow, TableBody, IconButton, InputAdornment, TextField, MenuItem } from '@material-ui/core'
+import { Button, Dialog, Paper, Box, Container, Grid, Tooltip, TableCell, makeStyles, Typography, TableContainer, Table, TableHead, TableRow, TableBody, IconButton, InputAdornment, TextField, MenuItem, AppBar, Toolbar } from '@material-ui/core'
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useEffect } from 'react'
@@ -14,6 +14,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import sello from '../../../images/sello.png'
+import PrintIcon from '@material-ui/icons/Print';
 
 const ipcRenderer = window.require('electron').ipcRenderer
 const useStyles = makeStyles((theme) => ({
@@ -55,10 +56,14 @@ const ListaSubmateriales = (props) => {
 
     //---------------GET SUB-MATERIALES------------------------
     const getSubMaterial = async () => {
-        const result = await ipcRenderer.invoke('get-submaterial', url[2])
-        setSubMaterial(JSON.parse(result))
-        const result2 = await ipcRenderer.invoke("get-subMaterial-total", url[2])
-        setSubMaterialTotal(JSON.parse(result2))
+        try {
+            const result = await ipcRenderer.invoke('get-submaterial', url[2])
+            setSubMaterial(JSON.parse(result))
+            const result2 = await ipcRenderer.invoke("get-subMaterial-total", url[2])
+            setSubMaterialTotal(JSON.parse(result2))
+        } catch (error) {
+            console.log(error)
+        }
     }
     //-------------------EDIT SUB MATERIAL -----------------------
     const openModalImage = (e) => {
@@ -91,8 +96,12 @@ const ListaSubmateriales = (props) => {
     }
     //-------------------GET SUB - MATERIALES TOTAL -----------------------
     const getSubMaterialTotal = async () => {
-        const result = await ipcRenderer.invoke("get-subMaterial-total", url[2])
-        setSubMaterialTotal(JSON.parse(result))
+        try {
+            const result = await ipcRenderer.invoke("get-subMaterial-total", url[2])
+            setSubMaterialTotal(JSON.parse(result))
+        } catch (error) {
+            console.log(error)
+        }
 
     }
     //-------------------DELETE SUB - MATERIAL-----------------------
@@ -160,14 +169,58 @@ const ListaSubmateriales = (props) => {
         }
     }
     //--------------------------------------PDF GENERATE---------------------------------
-    var images = sello
     const pdfGenerate = () => {
-        const doc = new jsPDF()
+        // const doc = new jsPDF()
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [14, 7] })
+
+        var pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth()
+        var pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.height()
+
         document.getElementById('desaparecer1').style.display = 'none'
         document.getElementById('desaparecer2').style.display = 'none'
-        doc.text(`${url[3]}`, 80, 25)
-        doc.addImage(images, 20, 10, 35, 20)
-        doc.autoTable({ html: "#id-table", styles: { halign: 'center' }, margin: { top: 35 } })
+        doc.setFontSize(15)
+        doc.setFont('Courier', 'Bold');
+        doc.addImage(`${sello}`, 0.5, 0.3, 1.5, 0.7)
+        doc.text(`${url[3]}`, pageWidth / 2, 1, 'center')
+        // doc.autoTable({ html: "#id-table", styles: { fontSize: 9 }, margin: { top: 35 } })
+        doc.autoTable({
+            headStyles: {
+                fillColor: [50 , 50, 50]
+            },
+            bodyStyles:{
+                cellPadding:0.01
+            },
+            head: [[
+                { content: 'N°',styles: { halign: 'center' } },
+                { content: 'Cod',styles: { halign: 'center' } },
+                { content: 'Nombre',styles: { halign: 'center' } },
+                { content: 'Unidad',styles: { halign: 'center' } },
+                { content: 'Saldo Inicial',styles: { halign: 'center' } },
+                { content: 'Saldo Actual',styles: { halign: 'center' } },
+                { content: 'Precio Total',styles: { halign: 'center' } },
+                { content: 'Precio Unitario',styles: { halign: 'center' } },
+            ]],
+            body: array.map((d, index) => ([
+                { content: index + 1 },
+                { content: d.codSubMaterial,styles: { halign: 'center' } },
+                { content: d.nameSubMaterial },
+                { content: d.unidadMedida,styles: { halign: 'center' } },
+                { content: d.saldoInicial, styles: { halign: 'right' } },
+                { content: d.saldoActual, styles: { halign: 'right' } },
+                { content: d.precioTotal, styles: { halign: 'right' } },
+                { content: d.precioUnitario, styles: { halign: 'right' } },
+            ])),
+            styles: { fontSize: 8, font:'courier',fontStyle:'bold' },
+            startY: 1.3,
+        })
+        var pages = doc.internal.getNumberOfPages()
+        for (var i = 1; i <= pages; i++) {
+            var horizontalPos = pageWidth / 2
+            var verticalPos = pageHeight - 0.2
+            doc.setFontSize(8)
+            doc.setPage(i)
+            doc.text(`${i} de ${pages}`, horizontalPos, verticalPos, { align: 'center' })
+        }
         document.getElementById('desaparecer1').style.display = 'revert'
         document.getElementById('desaparecer2').style.display = 'revert'
         window.open(doc.output('bloburi'))
@@ -203,125 +256,128 @@ const ListaSubmateriales = (props) => {
 
     }
     //----------------------------------------------
-    //---------------------------------------------------
-    //---------------------------------------------------
-
-
-    // console.log(subMaterialTotal)
-    // console.log(subMaterial)
-    // console.log(array)
-    // console.log(changeData)
-
     return (
         <>
-            <Container maxWidth={false} >
-                <div style={{ paddingLeft: 240 }}>
-                    <Typography style={{ paddingTop: '5rem', marginBottom: '1rem' }} align='center' variant='h5'>{url[3]}</Typography>
-                    <Grid className={classes.spacingBot} container justifyContent='flex-end'>
-                        <Tooltip title='atras'>
-                            <IconButton style={{ color: 'black' }} component={Link} to="/listaProduct">
-                                <ArrowBackIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </Grid>
-                    <Grid container>
-                        <Grid item xs={8} sm={4}>
-                            <RegisterSubMaterial url={url} uno={getSubMaterial} />
-                        </Grid>
-                        <Grid item xs={8} sm={4}>
-                            <Paper>
-                                {array &&
-                                    <TextField
-                                        // style={{width:'100%'}}
-                                        fullWidth
-                                        InputProps={{
-                                            startAdornment: (
-                                                <>
-                                                    <Typography variant='subtitle1' style={{ marginRight: '0.5rem' }}>Buscar</Typography>
-                                                    <InputAdornment position='start'>
-                                                        <SearchIcon />
-                                                    </InputAdornment>
+            <Typography style={{ paddingTop: '2rem', marginBottom: '1rem', color: 'white' }} align='center' variant='h5'>{url[3]}</Typography>
+            <Container maxWidth='lg'>
+            <Grid container direction='row' justifyContent='space-between' alignItems='center' style={{ marginBottom: '0.5rem' }}>
+                <RegisterSubMaterial url={url} uno={getSubMaterial} />
+                <div>
+                    {array &&
+                        <TextField
+                            style={{ background: 'white', borderRadius: 5, marginRight: '1rem' }}
+                            variant='outlined'
+                            size='small'
+                            // fullWidth
+                            InputProps={{
+                                startAdornment: (
+                                    <>
+                                        <Typography variant='subtitle1' style={{ marginRight: '0.5rem' }}>Buscar</Typography>
+                                        <InputAdornment position='start'>
+                                            <SearchIcon />
+                                        </InputAdornment>
 
-                                                </>
-                                            )
-                                        }}
-                                        onChange={e => setBuscador(e.target.value)}
-                                    />
-                                }
-                            </Paper>
-                        </Grid>
-                        <Grid item xs={8} sm={4} container justifyContent='flex-end' alignItems='flex-start'>
-                            <Button size='small' variant='contained' color='primary' onClick={pdfGenerate}>imprimir</Button>
-                        </Grid>
-                    </Grid>
-                    <Paper component={Box} p={1}>
-                        <TableContainer>
-                            <Table id='id-table' style={{ minWidth: 1000 }}>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>{url[2]}</TableCell>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>Nombre</TableCell>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>Unidad</TableCell>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>Saldo Inicial</TableCell>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>Saldo Actual</TableCell>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>Precio Total</TableCell>
-                                        <TableCell style={{ color: 'white', backgroundColor: "black" }}>Precio Unitario</TableCell>
-                                        <TableCell id='desaparecer1' style={{ color: 'white', backgroundColor: "black" }}>Tarjeta/Kardex</TableCell>
-                                        <TableCell id='desaparecer2' style={{ color: 'white', backgroundColor: "black" }}>Acciones</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {array.length > 0 ? (
-                                        array.filter(buscarSubMaterial(buscador)).map(s => (
-                                            <TableRow key={s._id}>
-                                                <TableCell>{s.codSubMaterial}</TableCell>
-                                                <TableCell>{s.nameSubMaterial}</TableCell>
-                                                <TableCell>{s.unidadMedida}</TableCell>
-                                                <TableCell>{s.saldoInicial}</TableCell>
-                                                <TableCell>{s.saldoActual}</TableCell>
-                                                <TableCell>{s.precioTotal}</TableCell>
-                                                <TableCell>{s.precioUnitario}</TableCell>
-                                                <TableCell>
-                                                    <Grid container justifyContent='space-evenly'>
-                                                        <Tooltip title='edit'>
-                                                            <IconButton size='small' style={{ color: 'green' }} onClick={() => openModalImage(s)}>
-                                                                <ImageIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title='tarjeta'>
-                                                            <IconButton size='small' onClick={() => irTarjeta(s)}>
-                                                                <InfoIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title='kardex' >
-                                                            <IconButton size='small' onClick={() => irkardex(s)}>
-                                                                <CreditCardIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Grid>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Grid container justifyContent='space-evenly'>
-                                                        <Tooltip title='delete'>
-                                                            <IconButton size='small' style={{ color: 'red' }} onClick={() => openModalImageDelete(s)}>
-                                                                <DeleteIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Grid>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan='8'>no existe informacion</TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Paper>
+                                    </>
+                                )
+                            }}
+                            onChange={e => setBuscador(e.target.value)}
+                        />
+                    }
+                    <IconButton
+                        component="span"
+                        style={{
+                            color: 'white',
+                            background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)',
+                            marginRight: '0.5rem',
+                        }}
+                        onClick={pdfGenerate}>
+                        <Tooltip title='imprimir'>
+                            <PrintIcon />
+                        </Tooltip>
+                    </IconButton>
+                    <IconButton
+                        style={{
+                            color: 'white',
+                            background: 'linear-gradient(45deg, #0277bd 30%, #82b1ff 90%)',
+                            marginRight: '0.5rem',
+                        }}
+                        component={Link}
+                        to="/listaProduct">
+                        <Tooltip title='atras'>
+                            <ArrowBackIcon />
+                        </Tooltip>
+                    </IconButton>
                 </div>
+
+            </Grid>
+            <Paper component={Box} p={0.3}>
+                <TableContainer style={{ maxHeight: 550 }}>
+                    <Table id='id-table' style={{ minWidth: 1000 }} stickyHeader size='small'>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>{url[2]}</TableCell>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>Nombre</TableCell>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>Unidad</TableCell>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>Saldo Inicial</TableCell>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>Saldo Actual</TableCell>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>Precio Total</TableCell>
+                                <TableCell style={{ color: 'white', backgroundColor: "black" }}>Precio Unitario</TableCell>
+                                <TableCell id='desaparecer1' style={{ color: 'white', backgroundColor: "black" }}>Tarjeta/Kardex</TableCell>
+                                <TableCell id='desaparecer2' style={{ color: 'white', backgroundColor: "black" }}>Acciones</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {array.length > 0 ? (
+                                array.filter(buscarSubMaterial(buscador)).map(s => (
+                                    <TableRow key={s._id}>
+                                        <TableCell>{s.codSubMaterial}</TableCell>
+                                        <TableCell>{s.nameSubMaterial}</TableCell>
+                                        <TableCell>{s.unidadMedida}</TableCell>
+                                        <TableCell align='right'>{s.saldoInicial}</TableCell>
+                                        <TableCell align='right'>{s.saldoActual}</TableCell>
+                                        <TableCell align='right'>{s.precioTotal}</TableCell>
+                                        <TableCell align='right'>{s.precioUnitario}</TableCell>
+                                        <TableCell>
+                                            <Grid container justifyContent='space-evenly'>
+                                                <Tooltip title='edit'>
+                                                    <IconButton size='small' style={{ color: 'green' }} onClick={() => openModalImage(s)}>
+                                                        <ImageIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title='tarjeta'>
+                                                    <IconButton size='small' onClick={() => irTarjeta(s)}>
+                                                        <InfoIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title='kardex' >
+                                                    <IconButton size='small' onClick={() => irkardex(s)}>
+                                                        <CreditCardIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Grid>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Grid container justifyContent='space-evenly'>
+                                                <Tooltip title='delete'>
+                                                    <IconButton size='small' style={{ color: 'red' }} onClick={() => openModalImageDelete(s)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Grid>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan='8' align='center'>no existe informacion</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
             </Container>
+            {/* ------------------------------------------------------------------*/}
             <Dialog
                 open={openImage}
                 onClose={closeModalImage}
@@ -396,29 +452,29 @@ const ListaSubmateriales = (props) => {
                             </Grid>
                         </Grid> */}
                         <div align='center' className={classes.spacingBot}>
-                                    <Paper component={Box} p={1} style={{ background: '#bdbdbd', width: '250px', height: '250px' }}>
-                                        {/* <img id='img' src={changeData.image} style={{ width: '100%', height: '100%' }} alt='#' /> */}
-                                        <img id='img' src={preview} style={{ width: '100%', height: '100%' }} alt='#' />
-                                        {/* <img id='img2' src={preview} style={{ width: '100%', height: '100%', display: 'none' }} alt='#' /> */}
-                                    </Paper>
-                                    <input
-                                        name='image'
-                                        type='file'
-                                        accept='image/*'
-                                        id='file-image'
-                                        style={{ display: 'none' }}
-                                        // value={changeData.image}
-                                        onChange={handleChange}
-                                    // required
+                            <Paper component={Box} p={1} style={{ background: '#bdbdbd', width: '250px', height: '250px' }}>
+                                {/* <img id='img' src={changeData.image} style={{ width: '100%', height: '100%' }} alt='#' /> */}
+                                <img id='img' src={preview} style={{ width: '100%', height: '100%' }} alt='#' />
+                                {/* <img id='img2' src={preview} style={{ width: '100%', height: '100%', display: 'none' }} alt='#' /> */}
+                            </Paper>
+                            <input
+                                name='image'
+                                type='file'
+                                accept='image/*'
+                                id='file-image'
+                                style={{ display: 'none' }}
+                                // value={changeData.image}
+                                onChange={handleChange}
+                            // required
 
-                                    />
-                                    <label htmlFor='file-image'>
-                                        <Button style={{ marginTop: '1rem',fontSize:'xx-small' }} variant='contained' color='primary' component='span'>cargar</Button>
-                                    </label>
-                                </div>
+                            />
+                            <label htmlFor='file-image'>
+                                <Button style={{ marginTop: '1rem', fontSize: 'xx-small' }} variant='contained' color='primary' component='span'>cargar</Button>
+                            </label>
+                        </div>
                         <Grid container justifyContent='space-evenly'>
-                            <Button style={{fontSize:'xx-small'}} variant='contained' color='primary' type='submit' >aceptar</Button>
-                            <Button style={{fontSize:'xx-small'}} variant='contained' color='secondary' onClick={closeModalImage} >cancelar</Button>
+                            <Button style={{ fontSize: 'xx-small' }} variant='contained' color='primary' type='submit' >aceptar</Button>
+                            <Button style={{ fontSize: 'xx-small' }} variant='contained' color='secondary' onClick={closeModalImage} >cancelar</Button>
                         </Grid>
                     </form>
                 </Paper>

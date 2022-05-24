@@ -52,12 +52,12 @@ const AppBarPrincipal = () => {
     // console.log(changeData)
     return (
         <>
-        <AppBar position='fixed' style={{background:'#424242'}}>
+        {/* <AppBar position='fixed' style={{background:'#424242'}}>
             <Toolbar>
                 <div style={{flexGrow:1}}></div>
                 <Button size='small' variant='contained' color='primary' onClick={openModalRegister}>U. Medida</Button>
             </Toolbar>
-        </AppBar>
+        </AppBar> */}
 
 
         <Dialog
