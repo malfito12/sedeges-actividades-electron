@@ -1,7 +1,7 @@
 {
-  "name": "ALMACEN-CACHITAMBO",
+  "name": "sedeges-actividades",
   "version": "0.1.0",
-  "description": "Aplicacion de Registro",
+  "description": "Aplicacion de Actividades",
   "author": "malfito12",
   "main": "public/electron.js",
   "build": {

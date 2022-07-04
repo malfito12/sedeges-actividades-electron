@@ -1,19 +1,12 @@
-import { ThemeProvider } from '@material-ui/core';
-import {createTheme} from '@material-ui/core/styles'
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
+import { AuthProvider } from './Component/Atoms/Context/AuthContext';
 
-const theme = createTheme({
-  typography: {
-    fontFamily: "Dubai Medium",
-    // fontSize: "10px",
-  }
-})
 ReactDOM.render(
-  <ThemeProvider theme={theme}>
+  <AuthProvider>
     <App />
-  </ThemeProvider>,
+  </AuthProvider>
+    ,
   document.getElementById('root')
-);
-
+)

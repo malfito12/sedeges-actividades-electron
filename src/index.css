@@ -1,22 +1,19 @@
-
-
-body{
-  background-image: url(../src/images/mi.jpg);
-  background-size: cover;
-  background-repeat: no-repeat;
+body {
+  margin: 0;
+  /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; */
+  background: rgb(8,13,55);
+background: linear-gradient(90deg, rgba(8,13,55,1) 0%, rgba(78,88,165,1) 50%, rgba(8,13,55,1) 100%);
   background-position: center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
+
 }
 
-/* body{
-  min-height: 100vh;
-  position: relative;
-}
-video{
-  position: absolute;
-  top: 0%;
-  left: 0%;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 } */
